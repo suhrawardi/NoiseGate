@@ -54,6 +54,11 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-    //==============================================================================
+    juce::AudioParameterFloat* threshold;
+    juce::AudioParameterFloat* alpha;
+    int sampleCountDown;
+
+    float loPassCoeff;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NoiseGateAudioProcessor)
 };
