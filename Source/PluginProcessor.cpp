@@ -80,6 +80,8 @@ void NoiseGateAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    lowPassCoeff = 0.0f;
+    sampleCountDown = 0;
 }
 
 void NoiseGateAudioProcessor::releaseResources()
@@ -90,14 +92,8 @@ void NoiseGateAudioProcessor::releaseResources()
 
 bool NoiseGateAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
-        return false;
-
-    // This checks if the input layout matches the output layout
-    return true;
+    return layouts.getMainInputChannelSet() == layouts.getMainOutputChannelSet()
+        && ! layouts.getMainInputChannelSet().isDisabled();
 }
 
 void NoiseGateAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)

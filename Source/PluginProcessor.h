@@ -58,7 +58,7 @@ private:
     juce::AudioParameterFloat* alpha;
     int sampleCountDown;
 
-    float loPassCoeff;
+    float lowPassCoeff;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NoiseGateAudioProcessor)
 };
