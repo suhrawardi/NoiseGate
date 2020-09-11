@@ -98,30 +98,30 @@ bool NoiseGateAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 
 void NoiseGateAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+    auto mainInputOutput = getBusBuffer (buffer, true, 0);
+    auto sideChainInput  = getBusBuffer (buffer, true, 1);
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+    auto alphaCopy = alpha->get();
+    auto thresholdCopy = threshold->get();
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    for (auto j = 0; j < buffer.getNumSamples(); ++j)
     {
-        auto* channelData = buffer.getWritePointer (channel);
+      auto mixedSamples = 0.0f;
 
-        // ..do something to the data...
+      for (auto i = 0; i < sideChainInput.getNumChannels(); ++i)
+          mixedSamples += sideChainInput.getReadPointer (i) [j];
+
+      mixedSamples /= static_cast<float> (sideChainInput.getNumChannels());
+      lowPassCoeff = (alphaCopy * lowPassCoeff) + ((1.0f - alphaCopy) * mixedSamples);
+
+      if (lowPassCoeff >= thresholdCopy)
+          sampleCountDown = (int) getSampleRate();
+
+      for (auto i = 0; i < mainInputOutput.getNumChannels(); ++i)
+          *mainInputOutput.getWritePointer (i, j) = sampleCountDown > 0 ? *mainInputOutput.getReadPointer (i, j) : 0.0f;
+
+      if (sampleCountDown > 0)
+          --sampleCountDown;
     }
 }
 
