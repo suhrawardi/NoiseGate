@@ -18,7 +18,7 @@ NoiseGateAudioProcessor::NoiseGateAudioProcessor()
                        )
 {
   addParameter (threshold = new juce::AudioParameterFloat ("threshold", "Threshold", 0.0f, 1.0f, 0.5f));
-  addParameter (threshold = new juce::AudioParameterFloat ("alpha", "Alpha", 0.0f, 1.0f, 0.8f));
+  addParameter (alpha = new juce::AudioParameterFloat ("alpha", "Alpha", 0.0f, 1.0f, 0.8f));
 }
 
 NoiseGateAudioProcessor::~NoiseGateAudioProcessor()
@@ -28,7 +28,7 @@ NoiseGateAudioProcessor::~NoiseGateAudioProcessor()
 //==============================================================================
 const juce::String NoiseGateAudioProcessor::getName() const
 {
-    return JucePlugin_Name;
+    return "Noise Gate";
 }
 
 bool NoiseGateAudioProcessor::acceptsMidi() const
@@ -76,7 +76,7 @@ void NoiseGateAudioProcessor::changeProgramName (int index, const juce::String& 
 }
 
 //==============================================================================
-void NoiseGateAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void NoiseGateAudioProcessor::prepareToPlay (double, int)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
@@ -133,21 +133,24 @@ bool NoiseGateAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* NoiseGateAudioProcessor::createEditor()
 {
-    return new NoiseGateAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================
 void NoiseGateAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream stream (destData, true);
+
+    stream.writeFloat (*threshold);
+    stream.writeFloat (*alpha);
 }
 
 void NoiseGateAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    juce::MemoryInputStream stream (data, static_cast<size_t> (sizeInBytes), false);
+
+    threshold->setValueNotifyingHost (stream.readFloat());
+    alpha->setValueNotifyingHost (stream.readFloat());
 }
 
 //==============================================================================
